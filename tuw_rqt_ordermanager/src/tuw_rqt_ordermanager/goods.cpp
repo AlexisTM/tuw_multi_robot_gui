@@ -129,7 +129,7 @@ void Goods::initPlugin(qt_gui_cpp::PluginContext& context)
 
 	ui_.map_view->setScene(&scene);
 
-    pub_goods = getNodeHandle().advertise<tuw_multi_robot_msgs::Goods>("goods", 1);
+    pub_goods = getNodeHandle().advertise<tuw_multi_robot_msgs::Goods>("/goods", 1);
 
     subscriptions.push_back(getNodeHandle().subscribe("/map", 0, &tuw_rqt_ordermanager::Goods::mapCallback, this));
     subscriptions.push_back(getNodeHandle().subscribe("/robot_info", 10, &tuw_rqt_ordermanager::Goods::robotInfoCallback, this));
