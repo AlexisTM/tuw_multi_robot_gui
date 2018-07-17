@@ -13,82 +13,88 @@
 #include <ros/ros.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <nav_msgs/Odometry.h>
-#include <tuw_geometry_msgs/pose.h>
-#include <tuw_multi_robot_msgs/Goods.h>
+#include <geometry_msgs/Pose.h>
+#include <tuw_multi_robot_msgs/OrderArray.h>
 #include <tuw_multi_robot_msgs/GoodPosition.h>
 #include <tuw_multi_robot_msgs/RobotInfo.h>
 
 namespace tuw_rqt_ordermanager
 {
 
-enum transform_ax {
-    TRANSFORM_X,
-    TRANSFORM_Y,
-    TRANSFORM_Z,
-    TRANSFORM_SCALAR
+enum TransformAxes
+{
+  TRANSFORM_X,
+  TRANSFORM_Y,
+  TRANSFORM_Z,
+  TRANSFORM_SCALAR
 };
 
-class Goods
-    : public rqt_gui_cpp::Plugin
+class Goods : public rqt_gui_cpp::Plugin
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-    Goods();
-    virtual void initPlugin(qt_gui_cpp::PluginContext& context);
-    virtual void shutdownPlugin();
-    virtual void saveSettings(qt_gui_cpp::Settings& plugin_settings,
-        qt_gui_cpp::Settings& instance_settings) const;
-    virtual void restoreSettings(const qt_gui_cpp::Settings& plugin_settings,
-        const qt_gui_cpp::Settings& instance_settings);
+  Goods();
+  virtual void initPlugin(qt_gui_cpp::PluginContext&);
+  virtual void shutdownPlugin();
+  virtual void saveSettings(
+      qt_gui_cpp::Settings& plugin_settings, 
+      qt_gui_cpp::Settings& instance_settings) const;
+  virtual void restoreSettings(
+      const qt_gui_cpp::Settings& plugin_settings,
+      const qt_gui_cpp::Settings& instance_settings);
 
-    // Comment in to signal that the plugin has a way to configure it
-    // bool hasConfiguration() const;
-    // void triggerConfiguration();
+  // Comment in to signal that the plugin has a way to configure it
+  // bool hasConfiguration() const;
+  // void triggerConfiguration();
 
-    void mapCallback(const nav_msgs::OccupancyGrid& msg);
-    void odomCallback(const nav_msgs::Odometry& odom);
-    void robotInfoCallback(const tuw_multi_robot_msgs::RobotInfo& ri);
-    void goodPoseCallback(const tuw_multi_robot_msgs::GoodPosition&);
-    float transform_map_to_scene(int ax, float v);
-    float transform_scene_to_map(int ax, float v);
-    geometry_msgs::Pose transform_scene_to_map(geometry_msgs::Pose);
-    geometry_msgs::Pose transform_map_to_scene(geometry_msgs::Pose);
+  void mapCallback(const nav_msgs::OccupancyGrid&);
+  void odomCallback(const nav_msgs::Odometry&);
+  void robotInfoCallback(const tuw_multi_robot_msgs::RobotInfo&);
+  void goodPoseCallback(const tuw_multi_robot_msgs::GoodPosition&);
+  float transformMapToScene(int ax, float v);
+  float transformSceneToMap(int ax, float v);
+  geometry_msgs::Pose transformSceneToMap(geometry_msgs::Pose);
+  geometry_msgs::Pose transformMapToScene(geometry_msgs::Pose);
+
 private:
-    Ui::GoodsWidget ui_;
-    QWidget* widget_;
-    QGraphicsScene scene;
-    void subscribe_robot_odom();
-    std::vector<ros::Subscriber> subscriptions;
-    ros::Publisher pub_goods;
+  void subscribeRobotOdom();
 
-    float mapHeight;
-    float mapOriginPositionX;
-    float mapOriginPositionY;
-    float mapOriginPositionZ;
-    float mapResolution;
+  Ui::GoodsWidget ui_;
+  QWidget* widget_;
+  QGraphicsScene scene_;
+  std::vector<ros::Subscriber> subscriptions_;
+  ros::Publisher pub_goods_;
 
-    std::vector<QColor> goodColors;
+  float map_height_;
+  float map_origin_position_x_;
+  float map_origin_position_y_;
+  float map_origin_position_z_;
+  float map_resolution_;
+
+  std::vector<QColor> good_colors_;
+
 public slots:
-    void set_map(const nav_msgs::OccupancyGrid&);
-    void odom_handle(const nav_msgs::Odometry& odom);
-    void robot_info_handle(const tuw_multi_robot_msgs::RobotInfo& ri);
-    void good_position_handle(const tuw_multi_robot_msgs::GoodPosition&);
+  void setMap(const nav_msgs::OccupancyGrid&);
+  void odomHandle(const nav_msgs::Odometry&);
+  void robotInfoHandle(const tuw_multi_robot_msgs::RobotInfo&);
+  void goodPositionHandle(const tuw_multi_robot_msgs::GoodPosition&);
 
-    void new_robot();
-    void delete_robot();
-    void edit_robot();
-    void new_good();
-    void delete_good();
-    void edit_good();
-    void send_goods();
+  void newRobot();
+  void deleteRobot();
+  void editRobot();
+  void newGood();
+  void deleteGood();
+  void editGood();
+  void sendGoods();
 
-    void good_add_pose(float x, float y, float z);
-    void good_clear_poses();
+  void goodAddPose(float x, float y, float z);
+  void goodClearPoses();
+
 signals:
-    void map_changed(const nav_msgs::OccupancyGrid);
-    void odom_received(const nav_msgs::Odometry);
-    void robot_info_received(const tuw_multi_robot_msgs::RobotInfo& ri);
-    void good_position_received(const tuw_multi_robot_msgs::GoodPosition&);
+  void mapChanged(const nav_msgs::OccupancyGrid);
+  void odomReceived(const nav_msgs::Odometry);
+  void robotInfoReceived(const tuw_multi_robot_msgs::RobotInfo&);
+  void goodPositionReceived(const tuw_multi_robot_msgs::GoodPosition&);
 };
 
 }  // namespace tuw_rqt_ordermanager

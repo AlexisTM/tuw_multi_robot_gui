@@ -6,55 +6,54 @@
 
 #include <QGraphicsItem>
 #include <QListWidgetItem>
-#include <tuw_geometry_msgs/pose.h>
+#include <geometry_msgs/Pose.h>
 
-namespace tuw_rqt_ordermanager {
-
-enum drawing_modes {
-    DRAWING_MODE_PLAN,
-    DRAWING_MODE_EXEC
+namespace tuw_rqt_ordermanager
+{
+enum DrawingModes
+{
+  DRAWING_MODE_PLAN,
+  DRAWING_MODE_EXEC
 };
 
 class ItemGood : public QObject, public QGraphicsItem, public QListWidgetItem
 {
-    Q_OBJECT
+  Q_OBJECT
+
 public:
-    explicit ItemGood();
-    QRectF boundingRect() const;
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-               QWidget *widget);
+  static const float ITEM_SIZE = 3;
 
-    void setGoodName(QString);
-    QString getGoodName();
-    void setId(int);
-    int getId();
+  explicit ItemGood();
+  QRectF boundingRect() const;
+  void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
 
-    void addPose(tuw::ros_msgs::Pose*);
-    void clearPoses();
-    std::vector<tuw::ros_msgs::Pose*> getPoses();
+  void setGoodName(QString);
+  QString getGoodName();
+  void setId(int);
+  int getId();
 
-    void setColor(QColor &);
+  void addPose(geometry_msgs::Pose*);
+  void clearPoses();
+  std::vector<geometry_msgs::Pose*> getPoses();
 
-    static const float ITEM_SIZE = 3;
+  void setColor(QColor&);
 
-    void setDrawingMode(int);
-    void setCurrentPose(tuw::ros_msgs::Pose*);
+  void setDrawingMode(int);
+  void setCurrentPose(geometry_msgs::Pose*);
 
 private:
-    int id;
-    QString goodName;
+  int id_;
+  QString good_name_;
 
-    std::vector<tuw::ros_msgs::Pose*> poses;
-    tuw::ros_msgs::Pose* currentPose;
-    QBrush *coloredBrush;
-    QPen *coloredPen;
-    QColor color;
+  std::vector<geometry_msgs::Pose*> poses_;
+  geometry_msgs::Pose* current_pose_;
+  QBrush* colored_brush_;
+  QPen* colored_pen_;
+  QColor color_;
 
-    int drawingMode;
+  int drawing_mode_;
 };
 
-} // namespace tuw_rqt_ordermanager
+}  // namespace tuw_rqt_ordermanager
 
 #endif
-
-

@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   rqt_gui_cpp
   std_msgs
   nav_msgs
-  tuw_geometry_msgs
+  geometry_msgs
   tuw_multi_robot_msgs
   tf
 )
@@ -115,7 +115,7 @@ roslint_cpp()
 catkin_package(
   INCLUDE_DIRS include ${tuw_rqt_ordermanager_INCLUDE_DIRECTORIES}
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp rqt_gui_cpp std_msgs nav_msgs tuw_geometry_msgs tf
+  CATKIN_DEPENDS roscpp rqt_gui_cpp std_msgs nav_msgs geometry_msgs tf
 #  DEPENDS system_lib
 )
 
@@ -197,13 +197,11 @@ target_link_libraries(
 )
 target_link_libraries(
   item_robot
-  tuw_geometry_msgs
   ${catkin_LIBRARIES}
   ${qt_LIBRARIES}
 )
 target_link_libraries(
   item_good
-  tuw_geometry_msgs
   ${catkin_LIBRARIES}
   ${qt_LIBRARIES}
 )
@@ -229,7 +227,6 @@ target_link_libraries(${PROJECT_NAME}
   gooddialog
   item_robot
   item_good
-  tuw_geometry_msgs
   ${catkin_LIBRARIES}
   ${qt_LIBRARIES}
 )
@@ -287,3 +284,8 @@ endif()
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_dependencies(${PROJECT_NAME}
+    tuw_multi_robot_msgs_generate_messages_cpp
+    geometry_msgs_generate_messages_cpp
+)

@@ -5,30 +5,31 @@
 #include <QDialog>
 #include <QString>
 
-namespace Ui {
+namespace Ui
+{
 class RobotDialog;
 }
 
 class RobotDialog : public QDialog
 {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    explicit RobotDialog(QWidget *parent = 0);
-    ~RobotDialog();
+  explicit RobotDialog(QWidget* parent = 0);
+  ~RobotDialog();
 
-    QString getRobotName();
-    float getPositionX();
-    float getPositionY();
-    float getPositionZ();
+  QString getRobotName();
+  float getPositionX();
+  float getPositionY();
+  float getPositionZ();
 
-    void setRobotName(QString);
-    void setPositionX(float);
-    void setPositionY(float);
-    void setPositionZ(float);
+  void setRobotName(QString);
+  void setPositionX(float);
+  void setPositionY(float);
+  void setPositionZ(float);
 
 private:
-    Ui::RobotDialog *ui;
+  Ui::RobotDialog* ui_;
 };
 
-#endif // ROBOTDIALOG_H
+#endif  // ROBOTDIALOG_H

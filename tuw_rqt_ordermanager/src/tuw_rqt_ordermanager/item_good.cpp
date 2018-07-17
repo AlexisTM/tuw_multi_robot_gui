@@ -1,151 +1,149 @@
-# include "tuw_rqt_ordermanager/item_good.h"
+#include "tuw_rqt_ordermanager/item_good.h"
 
 #include <limits>
 
 namespace tuw_rqt_ordermanager
 {
-
-ItemGood::ItemGood()
-  : QObject(), QGraphicsItem(), QListWidgetItem()
+ItemGood::ItemGood() : QObject(), QGraphicsItem(), QListWidgetItem()
 {
-    color = Qt::blue;
-    coloredBrush = new QBrush(color);
-    coloredPen = new QPen(color);
-    this->drawingMode = DRAWING_MODE_PLAN;
+  color_ = Qt::blue;
+  colored_brush_ = new QBrush(color_);
+  colored_pen_ = new QPen(color_);
+  drawing_mode_ = DRAWING_MODE_PLAN;
 }
-
 
 QRectF ItemGood::boundingRect() const
 {
-    return QRectF(0,0,600,600);
+  return QRectF(0, 0, 600, 600);
 
-    //TODO: doesnt work when zooming
-    
-    qreal penWidth = 1;
-    int minx = std::numeric_limits<int>::max();
-    int miny = std::numeric_limits<int>::max();
-    int maxx = std::numeric_limits<int>::min();
-    int maxy = std::numeric_limits<int>::min();
+  // TODO: doesnt work when zooming
 
-    if ( poses.size() == 0 )
-    {
-        minx = 0;
-        miny = 0;
-        maxx = 0;
-        maxy = 0;
-    }
+  qreal penWidth = 1;
+  int minx = std::numeric_limits<int>::max();
+  int miny = std::numeric_limits<int>::max();
+  int maxx = std::numeric_limits<int>::min();
+  int maxy = std::numeric_limits<int>::min();
 
-    for (int i=0; i<poses.size(); ++i)
-    {
-        tuw::ros_msgs::Pose* pose = poses.at(i);
-        if ( minx > pose->position.x )
-            minx = pose->position.x;
-        if ( miny > pose->position.y )
-            miny = pose->position.y;
-        if ( maxx < pose->position.x )
-            maxx = pose->position.x;
-        if ( maxy < pose->position.y )
-            maxy = pose->position.y;
-    }
+  if (poses_.size() == 0)
+  {
+    minx = 0;
+    miny = 0;
+    maxx = 0;
+    maxy = 0;
+  }
 
-    return QRectF(minx - penWidth/2, miny - penWidth/2, maxx + ITEM_SIZE + penWidth/2, maxy + ITEM_SIZE + penWidth/2);
+  for (int i = 0; i < poses_.size(); ++i)
+  {
+    geometry_msgs::Pose* pose = poses_.at(i);
+    if (minx > pose->position.x)
+      minx = pose->position.x;
+    if (miny > pose->position.y)
+      miny = pose->position.y;
+    if (maxx < pose->position.x)
+      maxx = pose->position.x;
+    if (maxy < pose->position.y)
+      maxy = pose->position.y;
+  }
+
+  return QRectF(minx - penWidth / 2, miny - penWidth / 2, maxx + ITEM_SIZE + penWidth / 2,
+                maxy + ITEM_SIZE + penWidth / 2);
 }
 
-void ItemGood::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-                      QWidget *widget)
+void ItemGood::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
-    painter->setBrush(*coloredBrush);
-    painter->setPen(*coloredPen);
+  painter->setBrush(*colored_brush_);
+  painter->setPen(*colored_pen_);
 
-    QPointF *last_point = NULL;
+  QPointF* last_point = NULL;
 
-    for (int i=0; i<poses.size(); ++i)
+  for (int i = 0; i < poses_.size(); ++i)
+  {
+    geometry_msgs::Pose* pose = poses_.at(i);
+    if (last_point != NULL)
+      painter->drawLine(QPointF(last_point->x(), last_point->y()), QPointF(pose->position.x, pose->position.y));
+
+    last_point = new QPointF(pose->position.x, pose->position.y);
+  }
+
+  for (int i = 0; i < poses_.size(); ++i)
+  {
+    painter->setBrush(*colored_brush_);
+    geometry_msgs::Pose* pose = poses_.at(i);
+    QRectF* rect = new QRectF(pose->position.x - ITEM_SIZE / 2, pose->position.y - ITEM_SIZE / 2, ITEM_SIZE, ITEM_SIZE);
+    painter->drawRoundedRect(*rect, 0, 0);
+    if (i == 0)
     {
-        tuw::ros_msgs::Pose* pose = poses.at(i);
-        if (last_point != NULL)
-            painter->drawLine(QPointF(last_point->x(), last_point->y()), QPointF(pose->position.x, pose->position.y));
-
-        last_point = new QPointF(pose->position.x, pose->position.y);
+      painter->setBrush(QBrush(QColor(0, 0, 0, 0)));
+      painter->drawEllipse(QPointF(pose->position.x, pose->position.y), ITEM_SIZE * 2, ITEM_SIZE * 2);
     }
+  }
 
-    for (int i=0; i<poses.size(); ++i)
-    {
-        painter->setBrush(*coloredBrush);
-        tuw::ros_msgs::Pose* pose = poses.at(i);
-        QRectF *rect = new QRectF(pose->position.x-ITEM_SIZE/2, pose->position.y-ITEM_SIZE/2, ITEM_SIZE, ITEM_SIZE);
-        painter->drawRoundedRect(*rect, 0, 0);
-        if ( i == 0 ) {
-            painter->setBrush(QBrush(QColor(0,0,0,0)));
-            painter->drawEllipse(QPointF(pose->position.x, pose->position.y), ITEM_SIZE*2, ITEM_SIZE*2);
-        }
-    }
-
-    if ( drawingMode == DRAWING_MODE_EXEC )
-    {
-        color.setAlpha(255);
-        QBrush *brush = new QBrush(color);
-        painter->setBrush(*brush);
-        QRectF *rect = new QRectF(currentPose->position.x-ITEM_SIZE/2, currentPose->position.y-ITEM_SIZE/2, ITEM_SIZE, ITEM_SIZE);
-        painter->drawRoundedRect(*rect, 0, 0);
-    }
-
+  if (drawing_mode_ == DRAWING_MODE_EXEC)
+  {
+    color_.setAlpha(255);
+    QBrush* brush = new QBrush(color_);
+    painter->setBrush(*brush);
+    QRectF* rect = new QRectF(current_pose_->position.x - ITEM_SIZE / 2, current_pose_->position.y - ITEM_SIZE / 2,
+                              ITEM_SIZE, ITEM_SIZE);
+    painter->drawRoundedRect(*rect, 0, 0);
+  }
 }
 
-void ItemGood::setGoodName(QString goodName)
+void ItemGood::setGoodName(QString good_name)
 {
-    this->goodName = goodName;
-    setText(goodName);
+  good_name_ = good_name;
+  setText(good_name);
 }
 
 void ItemGood::setId(int id)
 {
-    this->id = id;
+  id_ = id;
 }
 int ItemGood::getId()
 {
-    return id;
+  return id_;
 }
 QString ItemGood::getGoodName()
 {
-    return goodName;
+  return good_name_;
 }
 
-void ItemGood::addPose(tuw::ros_msgs::Pose* pose)
+void ItemGood::addPose(geometry_msgs::Pose* pose)
 {
-    poses.push_back(pose);
+  poses_.push_back(pose);
 }
 
 void ItemGood::clearPoses()
 {
-    poses.clear();
+  poses_.clear();
 }
 
-std::vector<tuw::ros_msgs::Pose*> ItemGood::getPoses()
+std::vector<geometry_msgs::Pose*> ItemGood::getPoses()
 {
-    return poses;
+  return poses_;
 }
 
-void ItemGood::setColor(QColor & color)
+void ItemGood::setColor(QColor& color)
 {
-    this->color = color;
-    coloredBrush = new QBrush(color);
-    coloredPen = new QPen(color);
+  color_ = color;
+  colored_brush_ = new QBrush(color_);
+  colored_pen_ = new QPen(color_);
 }
 
-void ItemGood::setDrawingMode(int drawingMode)
+void ItemGood::setDrawingMode(int drawing_mode)
 {
-    this->drawingMode = drawingMode;
-    if ( drawingMode == DRAWING_MODE_PLAN )
-        color.setAlpha(255);
-    else
-        color.setAlpha(50);
-    coloredBrush = new QBrush(color);
-    coloredPen = new QPen(color);
+  drawing_mode_ = drawing_mode;
+  if (drawing_mode_ == DRAWING_MODE_PLAN)
+    color_.setAlpha(255);
+  else
+    color_.setAlpha(50);
+  colored_brush_ = new QBrush(color_);
+  colored_pen_ = new QPen(color_);
 }
 
-void ItemGood::setCurrentPose(tuw::ros_msgs::Pose* pose)
+void ItemGood::setCurrentPose(geometry_msgs::Pose* pose)
 {
-    currentPose = pose;
+  current_pose_ = pose;
 }
 
-} // end namespace tuw_rqt_ordermanager
+}  // end namespace tuw_rqt_ordermanager

@@ -1,74 +1,68 @@
-# include "tuw_rqt_ordermanager/item_robot.h"
+#include "tuw_rqt_ordermanager/item_robot.h"
 
 namespace tuw_rqt_ordermanager
 {
-
-ItemRobot::ItemRobot()
-  : QObject(), QGraphicsItem(), QListWidgetItem()
+ItemRobot::ItemRobot() : QObject(), QGraphicsItem(), QListWidgetItem()
 {
-    radius = 2;
+  radius_ = 2;
 }
-
 
 QRectF ItemRobot::boundingRect() const
 {
-    qreal penWidth = 1;
-    float x = pose.position.x;
-    float y = pose.position.y;
-    float z = pose.position.z;
+  qreal penWidth = 1;
+  float x = pose_.position.x;
+  float y = pose_.position.y;
+  float z = pose_.position.z;
 
-    return QRectF(x-radius - penWidth/2 - 25, y-radius - penWidth/2 - 25,
-                  x+radius + penWidth/2 + 25, y+radius + penWidth/2 + 25);
+  return QRectF(x - radius_ - penWidth / 2 - 25, y - radius_ - penWidth / 2 - 25, x + radius_ + penWidth / 2 + 25,
+                y + radius_ + penWidth / 2 + 25);
 }
 
-void ItemRobot::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-                      QWidget *widget)
+void ItemRobot::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
-    float x = pose.position.x;
-    float y = pose.position.y;
-    float z = pose.position.z;
+  float x = pose_.position.x;
+  float y = pose_.position.y;
+  float z = pose_.position.z;
 
-    painter->setPen(Qt::NoPen);
-    painter->setBrush(*(new QColor(0,0,0,25)));
-    QRectF rect(x-25,y-25,50,50);
-    int angzero = 90;
-    int span = 90*16;
-    int angle = (angzero)*16 - span/2;
-    painter->drawPie(rect, angle, span);
+  painter->setPen(Qt::NoPen);
+  painter->setBrush(*(new QColor(0, 0, 0, 25)));
+  QRectF rect(x - 25, y - 25, 50, 50);
+  int angzero = 90;
+  int span = 90 * 16;
+  int angle = (angzero)*16 - span / 2;
+  painter->drawPie(rect, angle, span);
 
-    painter->setPen(Qt::SolidLine);
-    painter->setBrush(*(new QColor(0,255,0,255)));
-    painter->drawEllipse(QPointF(x,y), radius, radius);
-
+  painter->setPen(Qt::SolidLine);
+  painter->setBrush(*(new QColor(0, 255, 0, 255)));
+  painter->drawEllipse(QPointF(x, y), radius_, radius_);
 }
 
-void ItemRobot::setRobotName(QString robotName)
+void ItemRobot::setRobotName(QString robot_name)
 {
-    this->robotName = robotName;
-    setText(robotName);
+  robot_name_ = robot_name;
+  setText(robot_name);
 }
 
-void ItemRobot::setRobotRadius(float r)
+void ItemRobot::setRobotRadius(float radius)
 {
-    this->radius = r;
+  radius_ = radius;
 }
 
 QString ItemRobot::getRobotName()
 {
-    return robotName;
+  return robot_name_;
 }
 
 void ItemRobot::setPose(geometry_msgs::Pose pose)
 {
-    this->pose = pose;
+  pose_ = pose;
 
-    tf::Pose tfpose;
-    tf::poseMsgToTF(pose, tfpose);
-    float yaw = tf::getYaw(tfpose.getRotation());
+  tf::Pose tfpose;
+  tf::poseMsgToTF(pose_, tfpose);
+  float yaw = tf::getYaw(tfpose.getRotation());
 
-    setTransformOriginPoint(QPointF(pose.position.x, pose.position.y));
-    setRotation(90 - yaw * 180 / M_PI);
+  setTransformOriginPoint(QPointF(pose_.position.x, pose_.position.y));
+  setRotation(90 - yaw * 180 / M_PI);
 }
 
-} // end namespace tuw_rqt_ordermanager
-
+}  // end namespace tuw_rqt_ordermanager

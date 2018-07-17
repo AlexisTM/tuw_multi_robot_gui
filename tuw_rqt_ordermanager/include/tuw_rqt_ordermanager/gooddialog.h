@@ -5,30 +5,31 @@
 #include <QDialog>
 #include <QString>
 
-namespace Ui {
+namespace Ui
+{
 class GoodDialog;
 }
 
 class GoodDialog : public QDialog
 {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    explicit GoodDialog(QWidget *parent = 0);
-    ~GoodDialog();
+  explicit GoodDialog(QWidget* parent = 0);
+  ~GoodDialog();
 
-    QString getGoodName();
-    float getPositionX();
-    float getPositionY();
-    float getPositionZ();
+  QString getGoodName();
+  float getPositionX();
+  float getPositionY();
+  float getPositionZ();
 
-    void setGoodName(QString);
-    void setPositionX(float);
-    void setPositionY(float);
-    void setPositionZ(float);
+  void setGoodName(QString);
+  void setPositionX(float);
+  void setPositionY(float);
+  void setPositionZ(float);
 
 private:
-    Ui::GoodDialog *ui;
+  Ui::GoodDialog* ui_;
 };
 
-#endif // GOODDIALOG_H
+#endif  // GOODDIALOG_H
