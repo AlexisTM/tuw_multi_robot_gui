@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   geometry_msgs
   tuw_multi_robot_msgs
+  tuw_multi_robot_srvs
   tf
 )
 
@@ -125,20 +126,24 @@ set (tuw_rqt_ordermanager_SRCS
   src/tuw_rqt_ordermanager/goods.cpp
   src/tuw_rqt_ordermanager/item_robot.cpp
   src/tuw_rqt_ordermanager/item_good.cpp
+  src/tuw_rqt_ordermanager/item_station.cpp
 )
 
 set(tuw_rqt_ordermanager_HDRS
   include/tuw_rqt_ordermanager/goods.h
   include/tuw_rqt_ordermanager/goodsgraphicsview.h
   include/tuw_rqt_ordermanager/robotdialog.h
+  include/tuw_rqt_ordermanager/stationdialog.h
   include/tuw_rqt_ordermanager/gooddialog.h
   include/tuw_rqt_ordermanager/item_robot.h
   include/tuw_rqt_ordermanager/item_good.h
+  include/tuw_rqt_ordermanager/item_station.h
 )
 
 set(tuw_rqt_ordermanager_UIS
   src/tuw_rqt_ordermanager/goods.ui
   src/tuw_rqt_ordermanager/robotdialog.ui
+  src/tuw_rqt_ordermanager/stationdialog.ui
   src/tuw_rqt_ordermanager/gooddialog.ui
 )
 
@@ -174,9 +179,11 @@ include_directories(
 
 add_library(goodsgraphicsview SHARED src/tuw_rqt_ordermanager/goodsgraphicsview.cpp)
 add_library(robotdialog SHARED src/tuw_rqt_ordermanager/robotdialog.cpp)
+add_library(stationdialog SHARED src/tuw_rqt_ordermanager/stationdialog.cpp)
 add_library(gooddialog SHARED src/tuw_rqt_ordermanager/gooddialog.cpp)
 add_library(item_robot SHARED src/tuw_rqt_ordermanager/item_robot.cpp)
 add_library(item_good SHARED src/tuw_rqt_ordermanager/item_good.cpp)
+add_library(item_station SHARED src/tuw_rqt_ordermanager/item_station.cpp)
 
 #add_dependencies(${PROJECT_NAME} nav_msgs_generate_messages_cpp)
 
@@ -187,6 +194,11 @@ target_link_libraries(
 )
 target_link_libraries(
   robotdialog
+  ${catkin_LIBRARIES}
+  ${qt_LIBRARIES}
+)
+target_link_libraries(
+  stationdialog
   ${catkin_LIBRARIES}
   ${qt_LIBRARIES}
 )
@@ -202,6 +214,11 @@ target_link_libraries(
 )
 target_link_libraries(
   item_good
+  ${catkin_LIBRARIES}
+  ${qt_LIBRARIES}
+)
+target_link_libraries(
+  item_station
   ${catkin_LIBRARIES}
   ${qt_LIBRARIES}
 )
@@ -224,9 +241,11 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   goodsgraphicsview
   robotdialog
+  stationdialog
   gooddialog
   item_robot
   item_good
+  item_station
   ${catkin_LIBRARIES}
   ${qt_LIBRARIES}
 )

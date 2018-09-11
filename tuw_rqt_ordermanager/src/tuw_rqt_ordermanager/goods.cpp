@@ -103,15 +103,21 @@ void Goods::initPlugin(qt_gui_cpp::PluginContext& context)
   qRegisterMetaType<nav_msgs::Odometry>("nav_msgs::Odometry");
   qRegisterMetaType<tuw_multi_robot_msgs::RobotInfo>("tuw_multi_robot_msgs::RobotInfo");
   qRegisterMetaType<tuw_multi_robot_msgs::GoodPosition>("tuw_multi_robot_msgs::GoodPosition");
+  qRegisterMetaType<tuw_multi_robot_msgs::StationArray>("tuw_multi_robot_msgs::StationArray");
 
   connect(this, &Goods::mapChanged, this, &Goods::setMap);
   connect(this, &Goods::odomReceived, this, &Goods::odomHandle);
   connect(this, &Goods::robotInfoReceived, this, &Goods::robotInfoHandle);
   connect(this, &Goods::goodPositionReceived, this, &Goods::goodPositionHandle);
+  connect(this, &Goods::stationsReceived, this, &Goods::stationsHandle);
 
   connect(ui_.btn_new_robot, SIGNAL(clicked()), this, SLOT(newRobot()));
   connect(ui_.btn_delete_robot, SIGNAL(clicked()), this, SLOT(deleteRobot()));
   connect(ui_.btn_edit_robot, SIGNAL(clicked()), this, SLOT(editRobot()));
+
+  connect(ui_.btn_new_station, SIGNAL(clicked()), this, SLOT(newStation()));
+  connect(ui_.btn_delete_station, SIGNAL(clicked()), this, SLOT(deleteStation()));
+  connect(ui_.btn_edit_station, SIGNAL(clicked()), this, SLOT(editStation()));
 
   connect(ui_.btn_new_good, SIGNAL(clicked()), this, SLOT(newGood()));
   connect(ui_.btn_delete_good, SIGNAL(clicked()), this, SLOT(deleteGood()));
@@ -132,7 +138,10 @@ void Goods::initPlugin(qt_gui_cpp::PluginContext& context)
       getNodeHandle().subscribe("/robot_info", 10, &tuw_rqt_ordermanager::Goods::robotInfoCallback, this));
   subscriptions_.push_back(
       getNodeHandle().subscribe("/good_position", 10, &tuw_rqt_ordermanager::Goods::goodPoseCallback, this));
+  subscriptions_.push_back(
+      getNodeHandle().subscribe("/stations", 10, &tuw_rqt_ordermanager::Goods::stationsCallback, this));
   subscribeRobotOdom();
+
 }
 
 void Goods::shutdownPlugin()
@@ -213,6 +222,9 @@ void Goods::setMap(const nav_msgs::OccupancyGrid& map)
   }
 
   scene_.addPixmap(*pix);
+
+  // does not work in initPlugin, here it does (probably thread issue):
+  this->requestUpdateOnce();
 }
 
 void Goods::newGood()
@@ -343,6 +355,65 @@ void Goods::editRobot()
   }
 }
 
+void Goods::deleteStation()
+{
+  QList<QListWidgetItem*> list = ui_.lst_stations->selectedItems();
+  for (int i = 0; i < list.size(); ++i)
+  {
+    ItemStation* is = (ItemStation*)list[i];
+    tuw_multi_robot_srvs::StationManagerStationProtocol delStation;
+    tuw_multi_robot_msgs::Station station;
+    station.id = is->getId();
+    station.name = is->getStationName().toStdString();
+
+    delStation.request.request = "remove";
+    delStation.request.station = station;
+    if (ros::service::call("station_manager_station_service", delStation))
+    {
+      printf("delete: success calling station_manager_station_service\n");
+      std::cout << delStation.response.response << "\n";
+    }
+    else
+    {
+      printf("delete: error calling station_manager_station_service\n");
+    }
+
+  }
+}
+
+void Goods::newStation()
+{
+  StationDialog* dialog = new StationDialog();
+  int ret = dialog->exec();
+  if (ret == QDialog::Accepted)
+  {
+
+  
+    tuw_multi_robot_srvs::StationManagerStationProtocol addStation;
+    tuw_multi_robot_msgs::Station station;
+    station.id = dialog->getStationId(); //int32
+    station.name = dialog->getStationName().toStdString(); //string
+    //station.pose = pose; //geometry_msgs/Pose
+
+    geometry_msgs::Pose* pose = new geometry_msgs::Pose();
+    pose->position.x = dialog->getPositionX();
+    pose->position.y = dialog->getPositionY();
+    pose->position.z = dialog->getPositionZ();
+    station.pose = *pose;
+
+    addStation.request.request = "append";
+    addStation.request.station = station;
+    if (ros::service::call("station_manager_station_service", addStation))
+    {
+      printf("append: success calling station_manager_station_service\n");
+    }
+    else
+    {
+      printf("append: error calling station_manager_station_service\n");
+    }
+  }
+}
+
 void Goods::subscribeRobotOdom()
 {
   // TODO: use roboInfo instead of odom
@@ -365,6 +436,11 @@ void Goods::subscribeRobotOdom()
 void Goods::goodPoseCallback(const tuw_multi_robot_msgs::GoodPosition& gp)
 {
   emit goodPositionReceived(gp);
+}
+
+void Goods::stationsCallback(const tuw_multi_robot_msgs::StationArray& sa)
+{
+  emit stationsReceived(sa);
 }
 
 void Goods::robotInfoCallback(const tuw_multi_robot_msgs::RobotInfo& ri)
@@ -391,6 +467,25 @@ void Goods::goodPositionHandle(const tuw_multi_robot_msgs::GoodPosition& gp)
       scene_.update();
       break;
     }
+  }
+}
+
+void Goods::stationsHandle(const tuw_multi_robot_msgs::StationArray& sa)
+{
+  printf("stations handle\n");
+  ui_.lst_stations->clear();
+  for (int i = 0; i < sa.stations.size(); ++i)
+  {
+    tuw_multi_robot_msgs::Station station = sa.stations[i];
+    printf("handle station %d\n", i);
+    printf("station x: %f\n", station.pose.position.x);
+
+    ItemStation* is = new ItemStation();
+    is->setStationName(QString::fromStdString(station.name));
+    is->setPose(transformMapToScene(station.pose));
+
+    scene_.addItem(is);
+    ui_.lst_stations->addItem(is);
   }
 }
 
@@ -509,6 +604,22 @@ void Goods::goodClearPoses()
   ItemGood* ir = (ItemGood*)list[0];
   ir->clearPoses();
   scene_.update();
+}
+
+void Goods::requestUpdateOnce()
+{
+  tuw_multi_robot_srvs::StationManagerControlProtocol command;
+  command.request.request = "update";
+  command.request.addition = "once";
+  if(ros::service::call("station_manager_control_service", command))
+  {
+    printf("request update once success\n");
+    std::cout << command.response.response << "\n";
+  }
+  else
+  {
+    printf("request update once error\n");
+  }
 }
 
 }  // end namespace tuw_rqt_ordermanager

@@ -4,10 +4,17 @@
 #include <rqt_gui_cpp/plugin.h>
 #include <tuw_rqt_ordermanager/goodsgraphicsview.h>
 #include <tuw_rqt_ordermanager/ui_goods.h>
+
 #include <tuw_rqt_ordermanager/robotdialog.h>
+#include <tuw_rqt_ordermanager/stationdialog.h>
 #include <tuw_rqt_ordermanager/gooddialog.h>
+
+#include <tuw_multi_robot_srvs/StationManagerStationProtocol.h>
+#include <tuw_multi_robot_srvs/StationManagerControlProtocol.h>
+
 #include <tuw_rqt_ordermanager/item_robot.h>
 #include <tuw_rqt_ordermanager/item_good.h>
+#include <tuw_rqt_ordermanager/item_station.h>
 #include <QWidget>
 
 #include <ros/ros.h>
@@ -17,6 +24,8 @@
 #include <tuw_multi_robot_msgs/OrderArray.h>
 #include <tuw_multi_robot_msgs/GoodPosition.h>
 #include <tuw_multi_robot_msgs/RobotInfo.h>
+#include <tuw_multi_robot_msgs/Station.h>
+#include <tuw_multi_robot_msgs/StationArray.h>
 
 namespace tuw_rqt_ordermanager
 {
@@ -51,6 +60,7 @@ public:
   void odomCallback(const nav_msgs::Odometry&);
   void robotInfoCallback(const tuw_multi_robot_msgs::RobotInfo&);
   void goodPoseCallback(const tuw_multi_robot_msgs::GoodPosition&);
+  void stationsCallback(const tuw_multi_robot_msgs::StationArray&);
   float transformMapToScene(int ax, float v);
   float transformSceneToMap(int ax, float v);
   geometry_msgs::Pose transformSceneToMap(geometry_msgs::Pose);
@@ -78,10 +88,16 @@ public slots:
   void odomHandle(const nav_msgs::Odometry&);
   void robotInfoHandle(const tuw_multi_robot_msgs::RobotInfo&);
   void goodPositionHandle(const tuw_multi_robot_msgs::GoodPosition&);
+  void stationsHandle(const tuw_multi_robot_msgs::StationArray&);
 
   void newRobot();
   void deleteRobot();
   void editRobot();
+
+  void newStation();
+  void deleteStation();
+  void editStation();
+
   void newGood();
   void deleteGood();
   void editGood();
@@ -89,12 +105,14 @@ public slots:
 
   void goodAddPose(float x, float y, float z);
   void goodClearPoses();
+  void requestUpdateOnce();
 
 signals:
   void mapChanged(const nav_msgs::OccupancyGrid);
   void odomReceived(const nav_msgs::Odometry);
   void robotInfoReceived(const tuw_multi_robot_msgs::RobotInfo&);
   void goodPositionReceived(const tuw_multi_robot_msgs::GoodPosition&);
+  void stationsReceived(const tuw_multi_robot_msgs::StationArray&);
 };
 
 }  // namespace tuw_rqt_ordermanager
