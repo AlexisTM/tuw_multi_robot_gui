@@ -5,17 +5,16 @@ namespace tuw_rqt_ordermanager
 ItemRobot::ItemRobot() : QObject(), QGraphicsItem(), QListWidgetItem()
 {
   radius_ = 2;
+  drawBoundingRect_ = false;
 }
 
 QRectF ItemRobot::boundingRect() const
 {
-  qreal penWidth = 1;
   float x = pose_.position.x;
   float y = pose_.position.y;
   float z = pose_.position.z;
 
-  return QRectF(x - radius_ - penWidth / 2 - 25, y - radius_ - penWidth / 2 - 25, x + radius_ + penWidth / 2 + 25,
-                y + radius_ + penWidth / 2 + 25);
+  return QRectF(x - 25, y - 25, 50, 50);
 }
 
 void ItemRobot::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
@@ -35,6 +34,13 @@ void ItemRobot::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
   painter->setPen(Qt::SolidLine);
   painter->setBrush(*(new QColor(0, 255, 0, 255)));
   painter->drawEllipse(QPointF(x, y), radius_, radius_);
+  
+  // debug bounding rect:
+  if (drawBoundingRect_)
+  {
+    painter->setBrush(*(new QColor(0, 255, 0, 0)));
+    painter->drawRect(this->boundingRect());
+  }
 }
 
 void ItemRobot::setRobotName(QString robot_name)
@@ -63,6 +69,11 @@ void ItemRobot::setPose(geometry_msgs::Pose pose)
 
   setTransformOriginPoint(QPointF(pose_.position.x, pose_.position.y));
   setRotation(90 - yaw * 180 / M_PI);
+}
+
+void ItemRobot::setDrawBoundingRect(bool drawBoundingRect)
+{
+  drawBoundingRect_ = drawBoundingRect;
 }
 
 }  // end namespace tuw_rqt_ordermanager

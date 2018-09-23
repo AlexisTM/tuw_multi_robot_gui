@@ -23,14 +23,28 @@ public:
   void setStationName(QString);
   QString getStationName();
   void setPose(geometry_msgs::Pose);
+  geometry_msgs::Pose getPose();
   void setId(int);
   int getId();
+  void setDrawBoundingRect(bool);
+
+signals:
+  void setActiveStation(int id);
 
 private:
   QString station_name_;
   geometry_msgs::Pose pose_;
   float radius_;
   int id_;
+  bool is_hovered_;
+  bool drawBoundingRect_;
+
+protected:
+  void mousePressEvent(QGraphicsSceneMouseEvent*);
+  void mouseMoveEvent(QGraphicsSceneMouseEvent*);
+  void mouseReleaseEvent(QGraphicsSceneMouseEvent*);
+  void hoverEnterEvent(QGraphicsSceneHoverEvent*);
+  void hoverLeaveEvent(QGraphicsSceneHoverEvent*);
 };
 
 }  // namespace tuw_rqt_ordermanager

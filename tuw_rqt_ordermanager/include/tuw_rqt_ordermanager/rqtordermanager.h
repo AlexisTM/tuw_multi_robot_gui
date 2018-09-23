@@ -2,19 +2,20 @@
 #define TUW_RQT_ORDER_MANAGER_H
 
 #include <rqt_gui_cpp/plugin.h>
-#include <tuw_rqt_ordermanager/goodsgraphicsview.h>
-#include <tuw_rqt_ordermanager/ui_goods.h>
+#include <tuw_rqt_ordermanager/graphicsview.h>
+#include <tuw_rqt_ordermanager/ui_rqtordermanager.h>
 
 #include <tuw_rqt_ordermanager/robotdialog.h>
 #include <tuw_rqt_ordermanager/stationdialog.h>
-#include <tuw_rqt_ordermanager/gooddialog.h>
+#include <tuw_rqt_ordermanager/orderdialog.h>
 
 #include <tuw_multi_robot_srvs/StationManagerStationProtocol.h>
 #include <tuw_multi_robot_srvs/StationManagerControlProtocol.h>
 
 #include <tuw_rqt_ordermanager/item_robot.h>
-#include <tuw_rqt_ordermanager/item_good.h>
+#include <tuw_rqt_ordermanager/item_order.h>
 #include <tuw_rqt_ordermanager/item_station.h>
+#include <tuw_rqt_ordermanager/map_transformation.h>
 #include <QWidget>
 
 #include <ros/ros.h>
@@ -22,7 +23,7 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Pose.h>
 #include <tuw_multi_robot_msgs/OrderArray.h>
-#include <tuw_multi_robot_msgs/GoodPosition.h>
+#include <tuw_multi_robot_msgs/OrderPosition.h>
 #include <tuw_multi_robot_msgs/RobotInfo.h>
 #include <tuw_multi_robot_msgs/Station.h>
 #include <tuw_multi_robot_msgs/StationArray.h>
@@ -30,19 +31,11 @@
 namespace tuw_rqt_ordermanager
 {
 
-enum TransformAxes
-{
-  TRANSFORM_X,
-  TRANSFORM_Y,
-  TRANSFORM_Z,
-  TRANSFORM_SCALAR
-};
-
-class Goods : public rqt_gui_cpp::Plugin
+class RQTOrdermanager : public rqt_gui_cpp::Plugin
 {
   Q_OBJECT
 public:
-  Goods();
+  RQTOrdermanager();
   virtual void initPlugin(qt_gui_cpp::PluginContext&);
   virtual void shutdownPlugin();
   virtual void saveSettings(
@@ -59,21 +52,18 @@ public:
   void mapCallback(const nav_msgs::OccupancyGrid&);
   void odomCallback(const nav_msgs::Odometry&);
   void robotInfoCallback(const tuw_multi_robot_msgs::RobotInfo&);
-  void goodPoseCallback(const tuw_multi_robot_msgs::GoodPosition&);
+  void orderPositionCallback(const tuw_multi_robot_msgs::OrderPosition&);
   void stationsCallback(const tuw_multi_robot_msgs::StationArray&);
-  float transformMapToScene(int ax, float v);
-  float transformSceneToMap(int ax, float v);
-  geometry_msgs::Pose transformSceneToMap(geometry_msgs::Pose);
-  geometry_msgs::Pose transformMapToScene(geometry_msgs::Pose);
 
 private:
+  MapTransformation map_transformation_;
   void subscribeRobotOdom();
 
-  Ui::GoodsWidget ui_;
+  Ui::RQTOrdermanagerWidget ui_;
   QWidget* widget_;
   QGraphicsScene scene_;
   std::vector<ros::Subscriber> subscriptions_;
-  ros::Publisher pub_goods_;
+  ros::Publisher pub_orders_;
 
   float map_height_;
   float map_origin_position_x_;
@@ -81,37 +71,43 @@ private:
   float map_origin_position_z_;
   float map_resolution_;
 
-  std::vector<QColor> good_colors_;
+  ItemStation* findStationById(int id);
+  int findUnusedStationId();
+
+  std::vector<QColor> order_colors_;
 
 public slots:
   void setMap(const nav_msgs::OccupancyGrid&);
   void odomHandle(const nav_msgs::Odometry&);
   void robotInfoHandle(const tuw_multi_robot_msgs::RobotInfo&);
-  void goodPositionHandle(const tuw_multi_robot_msgs::GoodPosition&);
+  void orderPositionHandle(const tuw_multi_robot_msgs::OrderPosition&);
   void stationsHandle(const tuw_multi_robot_msgs::StationArray&);
 
   void newRobot();
   void deleteRobot();
   void editRobot();
+  void setDrawBoundingRects(bool);
 
-  void newStation();
+  void newStation(float x=0, float y=0, float z=0);
+  void ordersItemSelectionChanged();
   void deleteStation();
+  void deleteStationById(int);
   void editStation();
 
-  void newGood();
-  void deleteGood();
-  void editGood();
-  void sendGoods();
+  void newOrder();
+  void deleteOrder();
+  void editOrder();
+  void sendOrders();
 
-  void goodAddPose(float x, float y, float z);
-  void goodClearPoses();
+  void orderAddStation(int station_id);
+  void orderClearPoses();
   void requestUpdateOnce();
 
 signals:
   void mapChanged(const nav_msgs::OccupancyGrid);
   void odomReceived(const nav_msgs::Odometry);
   void robotInfoReceived(const tuw_multi_robot_msgs::RobotInfo&);
-  void goodPositionReceived(const tuw_multi_robot_msgs::GoodPosition&);
+  void orderPositionReceived(const tuw_multi_robot_msgs::OrderPosition&);
   void stationsReceived(const tuw_multi_robot_msgs::StationArray&);
 };
 

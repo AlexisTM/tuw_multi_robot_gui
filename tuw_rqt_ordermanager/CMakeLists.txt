@@ -123,28 +123,30 @@ catkin_package(
 SET(CMAKE_AUTOUIC ON)
 
 set (tuw_rqt_ordermanager_SRCS
-  src/tuw_rqt_ordermanager/goods.cpp
+  src/tuw_rqt_ordermanager/rqtordermanager.cpp
   src/tuw_rqt_ordermanager/item_robot.cpp
-  src/tuw_rqt_ordermanager/item_good.cpp
+  src/tuw_rqt_ordermanager/item_order.cpp
   src/tuw_rqt_ordermanager/item_station.cpp
+  src/tuw_rqt_ordermanager/map_transformation.cpp
 )
 
 set(tuw_rqt_ordermanager_HDRS
-  include/tuw_rqt_ordermanager/goods.h
-  include/tuw_rqt_ordermanager/goodsgraphicsview.h
+  include/tuw_rqt_ordermanager/rqtordermanager.h
+  include/tuw_rqt_ordermanager/graphicsview.h
   include/tuw_rqt_ordermanager/robotdialog.h
   include/tuw_rqt_ordermanager/stationdialog.h
-  include/tuw_rqt_ordermanager/gooddialog.h
+  include/tuw_rqt_ordermanager/orderdialog.h
   include/tuw_rqt_ordermanager/item_robot.h
-  include/tuw_rqt_ordermanager/item_good.h
+  include/tuw_rqt_ordermanager/item_order.h
   include/tuw_rqt_ordermanager/item_station.h
+  include/tuw_rqt_ordermanager/map_transformation.h
 )
 
 set(tuw_rqt_ordermanager_UIS
-  src/tuw_rqt_ordermanager/goods.ui
+  src/tuw_rqt_ordermanager/rqtordermanager.ui
   src/tuw_rqt_ordermanager/robotdialog.ui
   src/tuw_rqt_ordermanager/stationdialog.ui
-  src/tuw_rqt_ordermanager/gooddialog.ui
+  src/tuw_rqt_ordermanager/orderdialog.ui
 )
 
 set(tuw_rqt_ordermanager_INCLUDE_DIRECTORIES
@@ -177,18 +179,19 @@ include_directories(
   ${tuw_rqt_ordermanager_INCLUDE_DIRECTORIES}
 )
 
-add_library(goodsgraphicsview SHARED src/tuw_rqt_ordermanager/goodsgraphicsview.cpp)
+add_library(graphicsview SHARED src/tuw_rqt_ordermanager/graphicsview.cpp)
 add_library(robotdialog SHARED src/tuw_rqt_ordermanager/robotdialog.cpp)
 add_library(stationdialog SHARED src/tuw_rqt_ordermanager/stationdialog.cpp)
-add_library(gooddialog SHARED src/tuw_rqt_ordermanager/gooddialog.cpp)
+add_library(orderdialog SHARED src/tuw_rqt_ordermanager/orderdialog.cpp)
 add_library(item_robot SHARED src/tuw_rqt_ordermanager/item_robot.cpp)
-add_library(item_good SHARED src/tuw_rqt_ordermanager/item_good.cpp)
+add_library(item_order SHARED src/tuw_rqt_ordermanager/item_order.cpp)
 add_library(item_station SHARED src/tuw_rqt_ordermanager/item_station.cpp)
+add_library(map_transformation SHARED src/tuw_rqt_ordermanager/map_transformation.cpp)
 
 #add_dependencies(${PROJECT_NAME} nav_msgs_generate_messages_cpp)
 
 target_link_libraries(
-  goodsgraphicsview
+  graphicsview
   ${catkin_LIBRARIES}
   ${qt_LIBRARIES}
 )
@@ -203,7 +206,7 @@ target_link_libraries(
   ${qt_LIBRARIES}
 )
 target_link_libraries(
-  gooddialog
+  orderdialog
   ${catkin_LIBRARIES}
   ${qt_LIBRARIES}
 )
@@ -213,7 +216,7 @@ target_link_libraries(
   ${qt_LIBRARIES}
 )
 target_link_libraries(
-  item_good
+  item_order
   ${catkin_LIBRARIES}
   ${qt_LIBRARIES}
 )
@@ -239,13 +242,14 @@ add_library(${PROJECT_NAME}
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}
-  goodsgraphicsview
+  graphicsview
   robotdialog
   stationdialog
-  gooddialog
+  orderdialog
   item_robot
-  item_good
+  item_order
   item_station
+  map_transformation
   ${catkin_LIBRARIES}
   ${qt_LIBRARIES}
 )
@@ -307,4 +311,5 @@ endif()
 add_dependencies(${PROJECT_NAME}
     tuw_multi_robot_msgs_generate_messages_cpp
     geometry_msgs_generate_messages_cpp
+    tuw_multi_robot_srvs_generate_messages_cpp
 )

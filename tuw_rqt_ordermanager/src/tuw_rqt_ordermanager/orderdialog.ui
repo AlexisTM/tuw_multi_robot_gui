@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>GoodDialog</class>
- <widget class="QDialog" name="GoodDialog">
+ <class>OrderDialog</class>
+ <widget class="QDialog" name="OrderDialog">
   <property name="windowModality">
    <enum>Qt::ApplicationModal</enum>
   </property>
@@ -48,7 +48,7 @@
         </font>
        </property>
        <property name="text">
-        <string>New Good</string>
+        <string>New Order</string>
        </property>
       </widget>
      </item>
@@ -57,12 +57,12 @@
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>Good Name</string>
+          <string>Order Name</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="le_good_name"/>
+        <widget class="QLineEdit" name="le_order_name"/>
        </item>
       </layout>
      </item>

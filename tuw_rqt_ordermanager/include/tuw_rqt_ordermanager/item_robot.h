@@ -23,13 +23,14 @@ public:
   void setRobotName(QString);
   QString getRobotName();
   void setRobotRadius(float);
-
   void setPose(geometry_msgs::Pose);
+  void setDrawBoundingRect(bool);
 
 private:
   QString robot_name_;
   geometry_msgs::Pose pose_;
   float radius_;
+  bool drawBoundingRect_;
 };
 
 }  // namespace tuw_rqt_ordermanager

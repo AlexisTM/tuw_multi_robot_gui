@@ -1,5 +1,5 @@
 <library path="lib/libtuw_rqt_ordermanager">
-  <class name="tuw_rqt_ordermanager/Goods" type="tuw_rqt_ordermanager::Goods" base_class_type="rqt_gui_cpp::Plugin">
+  <class name="tuw_rqt_ordermanager/RQTOrdermanager" type="tuw_rqt_ordermanager::RQTOrdermanager" base_class_type="rqt_gui_cpp::Plugin">
     <description>
         TUW Order Manager
     </description>
@@ -13,7 +13,7 @@
       </group>
       -->
       <label>TUW Order Manager</label>
-      <icon type="theme">system-help</icon>
+      <!--icon type="theme">system-help</icon-->
       <statustip></statustip>
     </qtgui>
   </class>

@@ -1,5 +1,5 @@
-#ifndef GOODDIALOG_H
-#define GOODDIALOG_H
+#ifndef ORDERDIALOG_H
+#define ORDERDIALOG_H
 
 #include <iostream>
 #include <QDialog>
@@ -7,29 +7,29 @@
 
 namespace Ui
 {
-class GoodDialog;
+class OrderDialog;
 }
 
-class GoodDialog : public QDialog
+class OrderDialog : public QDialog
 {
   Q_OBJECT
 
 public:
-  explicit GoodDialog(QWidget* parent = 0);
-  ~GoodDialog();
+  explicit OrderDialog(QWidget* parent = 0);
+  ~OrderDialog();
 
-  QString getGoodName();
+  QString getOrderName();
   float getPositionX();
   float getPositionY();
   float getPositionZ();
 
-  void setGoodName(QString);
+  void setOrderName(QString);
   void setPositionX(float);
   void setPositionY(float);
   void setPositionZ(float);
 
 private:
-  Ui::GoodDialog* ui_;
+  Ui::OrderDialog* ui_;
 };
 
-#endif  // GOODDIALOG_H
+#endif  // ORDERDIALOG_H

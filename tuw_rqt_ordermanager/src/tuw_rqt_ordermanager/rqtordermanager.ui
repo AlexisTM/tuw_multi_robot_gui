@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>GoodsWidget</class>
- <widget class="QWidget" name="GoodsWidget">
+ <class>RQTOrdermanagerWidget</class>
+ <widget class="QWidget" name="RQTOrdermanagerWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>451</width>
-    <height>325</height>
+    <width>902</width>
+    <height>664</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,14 +25,25 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>Goods Manager</string>
+        <string>RQT Order Manager</string>
        </property>
       </widget>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,0">
        <item>
-        <widget class="tuw_rqt_ordermanager::GoodsGraphicsView" name="map_view"/>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="tuw_rqt_ordermanager::GraphicsView" name="map_view"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="status_label">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -83,38 +94,38 @@
          <item>
           <widget class="QLabel" name="label_3">
            <property name="text">
-            <string>Goods</string>
+            <string>Orders</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QListWidget" name="lst_goods"/>
+          <widget class="QListWidget" name="lst_orders"/>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_4">
            <item>
-            <widget class="QPushButton" name="btn_new_good">
+            <widget class="QPushButton" name="btn_new_order">
              <property name="text">
               <string>new</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="btn_edit_good">
+            <widget class="QPushButton" name="btn_edit_order">
              <property name="text">
               <string>edit</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="btn_delete_good">
+            <widget class="QPushButton" name="btn_delete_order">
              <property name="text">
               <string>delete</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="btn_clear_good_poses">
+            <widget class="QPushButton" name="btn_clear_order_poses">
              <property name="toolTip">
               <string/>
              </property>
@@ -162,6 +173,13 @@
             </widget>
            </item>
           </layout>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_showBoundingRects">
+           <property name="text">
+            <string>show object bounding rects</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -214,9 +232,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>tuw_rqt_ordermanager::GoodsGraphicsView</class>
+   <class>tuw_rqt_ordermanager::GraphicsView</class>
    <extends>QGraphicsView</extends>
-   <header>tuw_rqt_ordermanager/goodsgraphicsview.h</header>
+   <header>tuw_rqt_ordermanager/graphicsview.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
