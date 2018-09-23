@@ -104,7 +104,7 @@ void ItemOrder::paint(
     }
   }
 
-  if (drawing_mode_ == DRAWING_MODE_EXEC)
+  if (drawing_mode_ == DRAWING_MODE_EXEC && current_pose_ != NULL )
   {
     color_.setAlpha(255);
     QBrush* brush = new QBrush(color_);
