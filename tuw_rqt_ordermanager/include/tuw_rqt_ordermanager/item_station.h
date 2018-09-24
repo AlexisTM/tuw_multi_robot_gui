@@ -29,7 +29,7 @@ public:
   void setDrawBoundingRect(bool);
 
 signals:
-  void setActiveStation(int id);
+  void setActiveStation(std::string);
 
 private:
   QString station_name_;

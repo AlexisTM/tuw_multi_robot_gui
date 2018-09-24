@@ -6,6 +6,7 @@ namespace tuw_rqt_ordermanager
 {
 ItemOrder::ItemOrder() : QObject(), QGraphicsItem(), QListWidgetItem()
 {
+  stations_ = new RWVector<std::string>();
   color_ = Qt::blue;
   colored_brush_ = new QBrush(color_);
   colored_pen_ = new QPen(color_);
@@ -21,14 +22,24 @@ QRectF ItemOrder::boundingRect() const
   int maxx = std::numeric_limits<int>::min();
   int maxy = std::numeric_limits<int>::min();
 
-  if (stations_.size() == 0)
-    return QRectF(0, 0, 0, 0);
-
-  for (int i = 0; i < stations_.size(); ++i)
+  stations_->lock();
+  if (stations_->size() == 0)
   {
-    int _station_id = stations_.at(i);
+    stations_->unlock();
+    return QRectF(0, 0, 0, 0);
+  }
+
+  mtx_lst_stations_->lock();
+  int found = 0;
+  for (int i = 0; i < stations_->size(); ++i)
+  {
+    std::string _station_name = stations_->at(i);
+    QList<QListWidgetItem*> matched_stations = lst_stations_->findItems(QString::fromStdString(_station_name), Qt::MatchExactly);
+    if (matched_stations.size() == 0)
+      continue;
+    ++found;
     geometry_msgs::Pose pose =
-      ((ItemStation*)(lst_stations_->item(_station_id)))->getPose();
+      ((ItemStation*)(matched_stations.at(0)))->getPose();
 
     if (minx > pose.position.x)
       minx = pose.position.x;
@@ -39,6 +50,12 @@ QRectF ItemOrder::boundingRect() const
     if (maxy < pose.position.y)
       maxy = pose.position.y;
   }
+
+  mtx_lst_stations_->unlock();
+  stations_->unlock();
+
+  if (found == 0)
+    return QRectF(0, 0, 0, 0);
 
   return QRectF(
       minx - ITEM_SIZE/2,
@@ -61,11 +78,17 @@ void ItemOrder::paint(
 
   QPointF* last_point = NULL;
 
-  for (int i = 0; i < stations_.size(); ++i)
+  stations_->lock();
+  mtx_lst_stations_->lock();
+  for (int i = 0; i < stations_->size(); ++i)
   {
-    int _station_id = stations_.at(i);
+    std::string _station_name = stations_->at(i);
+    QList<QListWidgetItem*> matched_stations = lst_stations_->findItems(QString::fromStdString(_station_name), Qt::MatchExactly);
+    if (matched_stations.size() == 0)
+      continue;
     geometry_msgs::Pose pose =
-      ((ItemStation*)(lst_stations_->item(_station_id)))->getPose();
+      ((ItemStation*)(matched_stations.at(0)))->getPose();
+
     if (last_point != NULL)
       painter->drawLine(
           QPointF(
@@ -80,11 +103,15 @@ void ItemOrder::paint(
     last_point = new QPointF(pose.position.x, pose.position.y);
   }
 
-  for (int i = 0; i < stations_.size(); ++i)
+  for (int i = 0; i < stations_->size(); ++i)
   {
-    int _station_id = stations_.at(i);
+    std::string _station_name = stations_->at(i);
+    QList<QListWidgetItem*> matched_stations = lst_stations_->findItems(QString::fromStdString(_station_name), Qt::MatchExactly);
+    if (matched_stations.size() == 0)
+      continue;
     geometry_msgs::Pose pose =
-      ((ItemStation*)(lst_stations_->item(_station_id)))->getPose();
+      ((ItemStation*)(matched_stations.at(0)))->getPose();
+
     painter->setBrush(*colored_brush_);
     QRectF* rect = new QRectF(
         pose.position.x - ITEM_SIZE / 2,
@@ -103,6 +130,9 @@ void ItemOrder::paint(
           ITEM_SIZE * 2);
     }
   }
+
+  mtx_lst_stations_->unlock();
+  stations_->unlock();
 
   if (drawing_mode_ == DRAWING_MODE_EXEC && current_pose_ != NULL )
   {
@@ -146,17 +176,21 @@ QString ItemOrder::getOrderName()
   return order_name_;
 }
 
-void ItemOrder::addStation(int station_id)
+void ItemOrder::addStation(std::string station_name)
 {
-  stations_.push_back(station_id);
+  stations_->lock();
+  stations_->push_back(station_name);
+  stations_->unlock();
 }
 
 void ItemOrder::clearStations()
 {
-  stations_.clear();
+  stations_->lock();
+  stations_->clear();
+  stations_->unlock();
 }
 
-std::vector<int> ItemOrder::getStations()
+RWVector<std::string>* ItemOrder::getStations()
 {
   return stations_;
 }
@@ -196,6 +230,10 @@ void ItemOrder::setStationsList(QListWidget* lst_stations)
 void ItemOrder::setDrawBoundingRect(bool drawBoundingRect)
 {
   drawBoundingRect_ = drawBoundingRect;
+}
+void ItemOrder::setLstStationsLock(std::mutex* mtx_lst_stations)
+{
+  mtx_lst_stations_ = mtx_lst_stations;
 }
 
 }  // end namespace tuw_rqt_ordermanager

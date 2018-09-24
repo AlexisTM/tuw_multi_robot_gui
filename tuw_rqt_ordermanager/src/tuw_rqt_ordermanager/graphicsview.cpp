@@ -15,7 +15,7 @@ GraphicsView::GraphicsView(QWidget* parent) : QGraphicsView(parent)
   setTransformationAnchor(QGraphicsView::NoAnchor);
   setResizeAnchor(QGraphicsView::NoAnchor);
   num_scheduled_scalings_ = 0;
-  active_station_ = -1;
+  active_station_ = "";
 
   connect(this, SIGNAL(contextMenuSignal(QPoint&)), this, SLOT(showContextMenu(QPoint&)));
   pan_ = false;
@@ -69,7 +69,7 @@ void GraphicsView::mousePressEvent(QMouseEvent* event)
   
   if (event->button() == Qt::LeftButton)
   {
-    if (active_station_ != -1 )
+    if (active_station_ != "" )
     {
       pan_ = false;
       float x = event->x();
@@ -143,17 +143,17 @@ void GraphicsView::addStation(QPointF& pos)
   emit newStation(x, y, z);
 }
 
-void GraphicsView::delStation(int active_station)
+void GraphicsView::delStation(std::string active_station)
 {
-  if (active_station != -1)
+  if (active_station != "")
     emit removeStation(active_station);
 }
 
 void GraphicsView::showContextMenu(QPoint& pos)
 {
   // when contextmenu opens, focus leaves station thus active_station_ becomes
-  // -1. therefore store the current active station for context-menu actions.
-  int active_station_temp = active_station_;
+  // "". therefore store the current active station for context-menu actions.
+  std::string active_station_temp = active_station_;
 
   QMenu ctxMenu;
   QPoint globalPos = this->mapToGlobal(pos);
@@ -161,7 +161,7 @@ void GraphicsView::showContextMenu(QPoint& pos)
   QPointF* map_pos = new QPointF(scenePos.x(), scenePos.y());
   QAction* addStation = ctxMenu.addAction("add station here");
   QAction* delStation = ctxMenu.addAction("remove station");
-  if (active_station_temp == -1)
+  if (active_station_temp == "")
     delStation->setEnabled(false);
 
   QAction* selected = ctxMenu.exec(globalPos);
@@ -194,9 +194,9 @@ void GraphicsView::setMapTransformation(MapTransformation* map_transformation)
   map_transformation_ = map_transformation;
 }
 
-void GraphicsView::setActiveStation(int id)
+void GraphicsView::setActiveStation(std::string active_station)
 {
-  active_station_ = id;
+  active_station_ = active_station;
 }
 
 }  // end namespace tuw_rqt_ordermanager

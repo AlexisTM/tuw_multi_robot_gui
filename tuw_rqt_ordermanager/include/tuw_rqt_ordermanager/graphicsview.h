@@ -19,17 +19,17 @@ public:
 
 signals:
   //void orderAddPose(float x, float y, float z);
-  void orderAddStation(int station_id);
+  void orderAddStation(std::string);
   void contextMenuSignal(QPoint&);
   void newStation(float x, float y, float z);
-  void removeStation(int station_id);
+  void removeStation(std::string);
 
 public slots:
   void wheelEvent(QWheelEvent* event);
   void scalingTime(qreal x);
   void animFinished();
   void showContextMenu(QPoint&);
-  void setActiveStation(int id);
+  void setActiveStation(std::string);
 
 private:
   virtual void mouseMoveEvent(QMouseEvent* event);
@@ -39,12 +39,12 @@ private:
   MapTransformation* map_transformation_;
 
   void addStation(QPointF&);
-  void delStation(int);
+  void delStation(std::string);
 
   bool pan_;
   bool moved_;
   int pan_start_x_, pan_start_y_;
-  int active_station_;
+  std::string active_station_;
 
   qreal num_scheduled_scalings_;
   QPoint wheel_event_mouse_pos_;

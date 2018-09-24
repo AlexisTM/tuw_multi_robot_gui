@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(tuw_rqt_ordermanager)
 
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++17)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -228,10 +231,10 @@ target_link_libraries(
 
 ## Declare a cpp library
 add_library(${PROJECT_NAME}
-    ${tuw_rqt_ordermanager_SRCS}
-    ${tuw_rqt_ordermanager_MOCS}
-    ${tuw_rqt_ordermanager_UIS_H}
-    )
+  ${tuw_rqt_ordermanager_SRCS}
+  ${tuw_rqt_ordermanager_MOCS}
+  ${tuw_rqt_ordermanager_UIS_H}
+)
 
 ## Declare a C++ executable
 # add_executable(tuw_rqt_ordermanager_node src/tuw_rqt_ordermanager_node.cpp)

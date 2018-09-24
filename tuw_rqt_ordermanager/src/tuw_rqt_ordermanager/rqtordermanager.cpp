@@ -15,7 +15,6 @@
 #include <ros/ros.h>
 #include <nav_msgs/OccupancyGrid.h>
 
-#include <vector>
 #include <QMetaType>
 #include <QPixmap>
 #include <QtGlobal>
@@ -50,6 +49,8 @@ void RQTOrdermanager::initPlugin(qt_gui_cpp::PluginContext& context)
   // extend the widget with all attributes and children from UI file
   ui_.setupUi(widget_);
 
+  mtx_lst_stations = new std::mutex();
+
   // add widget to the user interface
   context.addWidget(widget_);
 
@@ -58,35 +59,36 @@ void RQTOrdermanager::initPlugin(qt_gui_cpp::PluginContext& context)
   qRegisterMetaType<tuw_multi_robot_msgs::RobotInfo>("tuw_multi_robot_msgs::RobotInfo");
   qRegisterMetaType<tuw_multi_robot_msgs::OrderPosition>("tuw_multi_robot_msgs::OrderPosition");
   qRegisterMetaType<tuw_multi_robot_msgs::StationArray>("tuw_multi_robot_msgs::StationArray");
+  qRegisterMetaType<std::string>("std::string");
 
-  connect(this, &RQTOrdermanager::mapChanged, this, &RQTOrdermanager::setMap);
-  connect(this, &RQTOrdermanager::odomReceived, this, &RQTOrdermanager::odomHandle);
-  connect(this, &RQTOrdermanager::robotInfoReceived, this, &RQTOrdermanager::robotInfoHandle);
-  connect(this, &RQTOrdermanager::orderPositionReceived, this, &RQTOrdermanager::orderPositionHandle);
-  connect(this, &RQTOrdermanager::stationsReceived, this, &RQTOrdermanager::stationsHandle);
+  connect(this, &RQTOrdermanager::mapChanged, this, &RQTOrdermanager::setMap, Qt::QueuedConnection);
+  connect(this, &RQTOrdermanager::odomReceived, this, &RQTOrdermanager::odomHandle, Qt::QueuedConnection);
+  connect(this, &RQTOrdermanager::robotInfoReceived, this, &RQTOrdermanager::robotInfoHandle, Qt::QueuedConnection);
+  connect(this, &RQTOrdermanager::orderPositionReceived, this, &RQTOrdermanager::orderPositionHandle, Qt::QueuedConnection);
+  connect(this, &RQTOrdermanager::stationsReceived, this, &RQTOrdermanager::stationsHandle, Qt::QueuedConnection);
 
-  connect(ui_.btn_new_robot, SIGNAL(clicked()), this, SLOT(newRobot()));
-  connect(ui_.btn_delete_robot, SIGNAL(clicked()), this, SLOT(deleteRobot()));
-  connect(ui_.btn_edit_robot, SIGNAL(clicked()), this, SLOT(editRobot()));
+  connect(ui_.btn_new_robot, SIGNAL(clicked()), this, SLOT(newRobot()), Qt::QueuedConnection);
+  connect(ui_.btn_delete_robot, SIGNAL(clicked()), this, SLOT(deleteRobot()), Qt::QueuedConnection);
+  connect(ui_.btn_edit_robot, SIGNAL(clicked()), this, SLOT(editRobot()), Qt::QueuedConnection);
 
-  connect(ui_.btn_new_station, SIGNAL(clicked()), this, SLOT(newStation()));
-  connect(ui_.btn_delete_station, SIGNAL(clicked()), this, SLOT(deleteStation()));
-  connect(ui_.btn_edit_station, SIGNAL(clicked()), this, SLOT(editStation()));
+  connect(ui_.btn_new_station, SIGNAL(clicked()), this, SLOT(newStation()), Qt::QueuedConnection);
+  connect(ui_.btn_delete_station, SIGNAL(clicked()), this, SLOT(deleteStation()), Qt::QueuedConnection);
+  connect(ui_.btn_edit_station, SIGNAL(clicked()), this, SLOT(editStation()), Qt::QueuedConnection);
 
-  connect(ui_.btn_new_order, SIGNAL(clicked()), this, SLOT(newOrder()));
-  connect(ui_.btn_delete_order, SIGNAL(clicked()), this, SLOT(deleteOrder()));
-  connect(ui_.btn_edit_order, SIGNAL(clicked()), this, SLOT(editOrder()));
+  connect(ui_.btn_new_order, SIGNAL(clicked()), this, SLOT(newOrder()), Qt::QueuedConnection);
+  connect(ui_.btn_delete_order, SIGNAL(clicked()), this, SLOT(deleteOrder()), Qt::QueuedConnection);
+  connect(ui_.btn_edit_order, SIGNAL(clicked()), this, SLOT(editOrder()), Qt::QueuedConnection);
 
-  connect(ui_.btn_start, SIGNAL(clicked()), this, SLOT(sendOrders()));
-  connect(ui_.btn_clear_order_poses, SIGNAL(clicked()), this, SLOT(orderClearPoses()));
+  connect(ui_.btn_start, SIGNAL(clicked()), this, SLOT(sendOrders()), Qt::QueuedConnection);
+  connect(ui_.btn_clear_order_poses, SIGNAL(clicked()), this, SLOT(orderClearPoses()), Qt::QueuedConnection);
 
-  connect(ui_.map_view, &GraphicsView::orderAddStation, this, &RQTOrdermanager::orderAddStation);
-  connect(ui_.map_view, &GraphicsView::newStation, this, &RQTOrdermanager::newStation);
-  connect(ui_.map_view, &GraphicsView::removeStation, this, &RQTOrdermanager::deleteStationById);
+  connect(ui_.map_view, &GraphicsView::orderAddStation, this, &RQTOrdermanager::orderAddStation, Qt::QueuedConnection);
+  connect(ui_.map_view, &GraphicsView::newStation, this, &RQTOrdermanager::newStation, Qt::QueuedConnection);
+  connect(ui_.map_view, &GraphicsView::removeStation, this, &RQTOrdermanager::lockedDeleteStationByName, Qt::QueuedConnection);
 
-  connect(ui_.lst_orders, &QListWidget::itemSelectionChanged, this, &RQTOrdermanager::ordersItemSelectionChanged);
+  connect(ui_.lst_orders, &QListWidget::itemSelectionChanged, this, &RQTOrdermanager::ordersItemSelectionChanged, Qt::QueuedConnection);
 
-  connect(ui_.cb_showBoundingRects, SIGNAL(clicked(bool)), this, SLOT(setDrawBoundingRects(bool)));
+  connect(ui_.cb_showBoundingRects, SIGNAL(clicked(bool)), this, SLOT(setDrawBoundingRects(bool)), Qt::QueuedConnection);
 
   ui_.map_view->setMapTransformation(&map_transformation_);
   ui_.map_view->setScene(&scene_);
@@ -140,7 +142,6 @@ void RQTOrdermanager::setMap(const nav_msgs::OccupancyGrid& map)
 {
   int width = map.info.width;
   int height = map.info.height;
-  std::vector<int8_t> data = map.data;
 
   map_transformation_.setMapHeight(height);
   map_transformation_.setMapResolution(map.info.resolution);
@@ -154,9 +155,9 @@ void RQTOrdermanager::setMap(const nav_msgs::OccupancyGrid& map)
   QPixmap* pix = new QPixmap(width, height);
   QPainter* paint = new QPainter(pix);
 
-  for (int i = 0; i < data.size(); ++i)
+  for (int i = 0; i < map.data.size(); ++i)
   {
-    int val = data[i];
+    int val = map.data[i];
     // val domain:
     // -1: unknown
     // 0-100: occupancy
@@ -201,6 +202,7 @@ void RQTOrdermanager::newOrder()
   {
     ItemOrder* ir = new ItemOrder();
     ir->setDrawBoundingRect(ui_.cb_showBoundingRects->isChecked());
+    ir->setLstStationsLock(mtx_lst_stations);
     ir->setStationsList(ui_.lst_stations);
 
     ir->setId(id);
@@ -292,11 +294,14 @@ void RQTOrdermanager::deleteRobot()
 
 void RQTOrdermanager::setDrawBoundingRects(bool checked)
 {
+  mtx_lst_stations->lock();
   for (int i = 0; i < ui_.lst_stations->count(); ++i)
   {
     ItemStation* is = (ItemStation*)ui_.lst_stations->item(i);
     is->setDrawBoundingRect(checked);
   }
+  mtx_lst_stations->unlock();
+
   for (int i = 0; i < ui_.lst_robots->count(); ++i)
   {
     ItemRobot* is = (ItemRobot*)ui_.lst_robots->item(i);
@@ -337,36 +342,51 @@ void RQTOrdermanager::editRobot()
   }
 }
 
-ItemStation* RQTOrdermanager::findStationById(int id)
+ItemStation* RQTOrdermanager::findStationByName(std::string station_name)
 {
   for (int i = 0; i < ui_.lst_stations->count(); ++i)
   {
     ItemStation* is = (ItemStation*)ui_.lst_stations->item(i);
-    if ( is->getId() == id )
+    if ( is->getStationName().toStdString() == station_name )
+    {
       return is;
+    }
   }
 
   return NULL;
 }
 
-int RQTOrdermanager::findUnusedStationId()
+std::string RQTOrdermanager::findUnusedStationName()
 {
-  //TODO: buggy. its not station id which must be unique but station_name
-  int id = 0;
-  for (int i = 0; i < ui_.lst_stations->count(); ++i)
+  bool found = false;
+  int id=0;
+  std::string station_name;
+  mtx_lst_stations->lock();
+  while (!found)
   {
-    ItemStation* is = (ItemStation*)ui_.lst_stations->item(i);
-    //printf("found id %d\n", is->getId());
-    if ( is->getId() >= id )
-      id = is->getId() + 1;
+    std::stringstream sstm;
+    sstm << "station_" << id;
+    station_name = sstm.str();
+    QString q_station_name = QString::fromStdString(station_name);
+    QList<QListWidgetItem*> matched_stations = ui_.lst_stations->findItems(q_station_name, Qt::MatchExactly);
+    if (matched_stations.size() == 0)
+      break;
+    ++id;
   }
-
-  return id;
+  mtx_lst_stations->unlock();
+  return station_name;
 }
 
-void RQTOrdermanager::deleteStationById(int station_id)
+void RQTOrdermanager::lockedDeleteStationByName(std::string station_name)
 {
-  ItemStation* is = findStationById(station_id);
+  mtx_lst_stations->lock();
+  deleteStationByName(station_name);
+  mtx_lst_stations->unlock();
+}
+
+void RQTOrdermanager::deleteStationByName(std::string station_name)
+{
+  ItemStation* is = findStationByName(station_name);
   tuw_multi_robot_srvs::StationManagerStationProtocol delStation;
   tuw_multi_robot_msgs::Station station;
   station.id = is->getId();
@@ -386,11 +406,15 @@ void RQTOrdermanager::deleteStationById(int station_id)
 
 void RQTOrdermanager::deleteStation()
 {
+  //TODO: delete station from orders as well
+  mtx_lst_stations->lock();
   QList<QListWidgetItem*> list = ui_.lst_stations->selectedItems();
   for (int i = 0; i < list.size(); ++i)
   {
-    deleteStationById(i);
+    std::string station_name = ((ItemStation*)list.at(i))->getStationName().toStdString();
+    deleteStationByName(station_name);
   }
+  mtx_lst_stations->unlock();
 }
 
 void RQTOrdermanager::newStation(float x, float y, float z)
@@ -400,10 +424,8 @@ void RQTOrdermanager::newStation(float x, float y, float z)
   dialog->setPositionY(y);
   dialog->setPositionZ(z);
 
-  int proposed_id = findUnusedStationId();
-  std::stringstream sstm;
-  sstm << "station_" << proposed_id;
-  std::string proposed_station_name = sstm.str();
+  std::string proposed_station_name = findUnusedStationName();
+  int proposed_id = 0;
   dialog->setStationName(QString::fromStdString(proposed_station_name));
   dialog->setStationId(proposed_id);
   
@@ -494,6 +516,7 @@ void RQTOrdermanager::orderPositionHandle(const tuw_multi_robot_msgs::OrderPosit
 
 void RQTOrdermanager::stationsHandle(const tuw_multi_robot_msgs::StationArray& sa)
 {
+  mtx_lst_stations->lock();
   ui_.lst_stations->clear();
   for (int i = 0; i < sa.stations.size(); ++i)
   {
@@ -509,9 +532,10 @@ void RQTOrdermanager::stationsHandle(const tuw_multi_robot_msgs::StationArray& s
     is->setPose(map_transformation_.transformMapToScene(station.pose));
 
     scene_.addItem(is);
-    connect(is, &ItemStation::setActiveStation, ui_.map_view, &GraphicsView::setActiveStation);
+    connect(is, &ItemStation::setActiveStation, ui_.map_view, &GraphicsView::setActiveStation, Qt::QueuedConnection);
     ui_.lst_stations->addItem(is);
   }
+  mtx_lst_stations->unlock();
 }
 
 void RQTOrdermanager::robotInfoHandle(const tuw_multi_robot_msgs::RobotInfo& ri)
@@ -569,11 +593,15 @@ void RQTOrdermanager::sendOrders()
     ItemOrder* ir = (ItemOrder*)ui_.lst_orders->item(i);
     ir->setDrawingMode(DRAWING_MODE_EXEC);
     //std::vector<geometry_msgs::Pose*> poses = ir->getPoses();
-    std::vector<int> station_ids = ir->getStations();
+    RWVector<std::string> * station_ids = ir->getStations();
+    station_ids->lock();
 
     // stations empty, no need to transport it anywhere
-    if (station_ids.size() <= 1)
+    if (station_ids->size() <= 1)
+    {
+      station_ids->unlock();
       continue;
+    }
 
     tuw_multi_robot_msgs::Order order_msg;
 
@@ -581,12 +609,18 @@ void RQTOrdermanager::sendOrders()
     order_msg.order_id = ir->getId();
 
     // target stations:
-    for (int j = 0; j < station_ids.size(); ++j)
+    mtx_lst_stations->lock();
+    for (int j = 0; j < station_ids->size(); ++j)
     {
-      int _station_id = station_ids[j];
-      //TODO 
+      std::string _station_name = station_ids->at(j);
+      // TODO send stations, not poses
+      
       //ItemStation* station = findStationById(_station_id);
-      geometry_msgs::Pose pose = ((ItemStation*)(ui_.lst_stations->item(_station_id)))->getPose();
+      ItemStation* station = findStationByName(_station_name);
+      if ( station == nullptr )
+        continue;
+
+      geometry_msgs::Pose pose = station->getPose();
       //geometry_msgs::Pose* pose = poses.at(j);
       float x = map_transformation_.transformSceneToMap(MapTransformation::TRANSFORM_X, pose.position.x);
       float y = map_transformation_.transformSceneToMap(MapTransformation::TRANSFORM_Y, pose.position.y);
@@ -597,8 +631,11 @@ void RQTOrdermanager::sendOrders()
       new_pose->position.x = x;
       new_pose->position.y = y;
       new_pose->position.z = z;
+
       order_msg.positions.push_back(*new_pose);
     }
+    mtx_lst_stations->unlock();
+    station_ids->unlock();
 
     order_array_msg.orders.push_back(order_msg);
   }
@@ -607,7 +644,7 @@ void RQTOrdermanager::sendOrders()
 }
 
 //void RQTOrdermanager::orderAddPose(float x, float y, float z)
-void RQTOrdermanager::orderAddStation(int station_id)
+void RQTOrdermanager::orderAddStation(std::string station_name)
 {
   QList<QListWidgetItem*> list = ui_.lst_orders->selectedItems();
   if (list.size() < 1)
@@ -625,7 +662,7 @@ void RQTOrdermanager::orderAddStation(int station_id)
     ir->setCurrentPose(pose);
   ir->addPose(pose);
   */
-  ir->addStation(station_id);
+  ir->addStation(station_name);
   scene_.update();
 }
 

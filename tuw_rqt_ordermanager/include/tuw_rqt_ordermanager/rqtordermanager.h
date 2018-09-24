@@ -28,6 +28,9 @@
 #include <tuw_multi_robot_msgs/Station.h>
 #include <tuw_multi_robot_msgs/StationArray.h>
 
+#include <mutex>
+
+
 namespace tuw_rqt_ordermanager
 {
 
@@ -71,10 +74,12 @@ private:
   float map_origin_position_z_;
   float map_resolution_;
 
-  ItemStation* findStationById(int id);
+  ItemStation* findStationByName(std::string);
   int findUnusedStationId();
+  std::string findUnusedStationName();
 
   std::vector<QColor> order_colors_;
+  std::mutex* mtx_lst_stations;
 
 public slots:
   void setMap(const nav_msgs::OccupancyGrid&);
@@ -91,7 +96,8 @@ public slots:
   void newStation(float x=0, float y=0, float z=0);
   void ordersItemSelectionChanged();
   void deleteStation();
-  void deleteStationById(int);
+  void deleteStationByName(std::string);
+  void lockedDeleteStationByName(std::string);
   void editStation();
 
   void newOrder();
@@ -99,7 +105,7 @@ public slots:
   void editOrder();
   void sendOrders();
 
-  void orderAddStation(int station_id);
+  void orderAddStation(std::string);
   void orderClearPoses();
   void requestUpdateOnce();
 
@@ -109,6 +115,7 @@ signals:
   void robotInfoReceived(const tuw_multi_robot_msgs::RobotInfo&);
   void orderPositionReceived(const tuw_multi_robot_msgs::OrderPosition&);
   void stationsReceived(const tuw_multi_robot_msgs::StationArray&);
+
 };
 
 }  // namespace tuw_rqt_ordermanager

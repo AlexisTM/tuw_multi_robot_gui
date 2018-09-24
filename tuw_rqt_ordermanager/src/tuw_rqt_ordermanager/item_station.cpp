@@ -98,13 +98,13 @@ void ItemStation::mouseReleaseEvent(QGraphicsSceneMouseEvent*)
 void ItemStation::hoverEnterEvent(QGraphicsSceneHoverEvent*)
 {
   is_hovered_ = true;
-  emit setActiveStation(id_);
+  emit setActiveStation(station_name_.toStdString());
   update();
 }
 void ItemStation::hoverLeaveEvent(QGraphicsSceneHoverEvent*)
 {
   is_hovered_ = false;
-  emit setActiveStation(-1);
+  emit setActiveStation("");
   update();
 }
 

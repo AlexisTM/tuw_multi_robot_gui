@@ -9,6 +9,9 @@
 #include <geometry_msgs/Pose.h>
 #include <tuw_rqt_ordermanager/item_station.h>
 
+#include <tuw_rqt_ordermanager/rw_vector.h>
+
+
 namespace tuw_rqt_ordermanager
 {
 enum DrawingModes
@@ -23,7 +26,7 @@ class ItemOrder : public QObject, public QGraphicsItem, public QListWidgetItem
   Q_OBJECT
 
 public:
-  static const float ITEM_SIZE = 3;
+  static constexpr float ITEM_SIZE = 3;
 
   explicit ItemOrder();
   QRectF boundingRect() const;
@@ -36,31 +39,32 @@ public:
 
   //void addPose(geometry_msgs::Pose*);
   //void clearPoses();
-  //std::vector<geometry_msgs::Pose*> getPoses();
-  void addStation(int station_id);
+  void addStation(std::string);
   void clearStations();
-  std::vector<int> getStations();
+  RWVector<std::string>* getStations();
 
   void setColor(QColor&);
 
   void setDrawingMode(int);
   void setCurrentPose(geometry_msgs::Pose*);
 
-  void setStationsList(QListWidget* lst_stations);
+  void setStationsList(QListWidget*);
   void setDrawBoundingRect(bool);
+
+  void setLstStationsLock(std::mutex*);
 
 private:
   int id_;
   QString order_name_;
 
-  //std::vector<geometry_msgs::Pose*> poses_;
-  std::vector<int> stations_;
+  RWVector<std::string>* stations_;
   geometry_msgs::Pose* current_pose_;
   QBrush* colored_brush_;
   QPen* colored_pen_;
   QColor color_;
 
   QListWidget* lst_stations_;
+  std::mutex* mtx_lst_stations_;
 
   int drawing_mode_;
   bool drawBoundingRect_;
