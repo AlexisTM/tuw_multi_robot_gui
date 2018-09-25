@@ -20,7 +20,6 @@
 
 #include <ros/ros.h>
 #include <nav_msgs/OccupancyGrid.h>
-#include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Pose.h>
 #include <tuw_multi_robot_msgs/OrderArray.h>
 #include <tuw_multi_robot_msgs/OrderPosition.h>
@@ -53,14 +52,12 @@ public:
   // void triggerConfiguration();
 
   void mapCallback(const nav_msgs::OccupancyGrid&);
-  void odomCallback(const nav_msgs::Odometry&);
   void robotInfoCallback(const tuw_multi_robot_msgs::RobotInfo&);
   void orderPositionCallback(const tuw_multi_robot_msgs::OrderPosition&);
   void stationsCallback(const tuw_multi_robot_msgs::StationArray&);
 
 private:
   MapTransformation map_transformation_;
-  void subscribeRobotOdom();
 
   Ui::RQTOrdermanagerWidget ui_;
   QWidget* widget_;
@@ -83,7 +80,6 @@ private:
 
 public slots:
   void setMap(const nav_msgs::OccupancyGrid&);
-  void odomHandle(const nav_msgs::Odometry&);
   void robotInfoHandle(const tuw_multi_robot_msgs::RobotInfo&);
   void orderPositionHandle(const tuw_multi_robot_msgs::OrderPosition&);
   void stationsHandle(const tuw_multi_robot_msgs::StationArray&);
@@ -111,7 +107,6 @@ public slots:
 
 signals:
   void mapChanged(const nav_msgs::OccupancyGrid);
-  void odomReceived(const nav_msgs::Odometry);
   void robotInfoReceived(const tuw_multi_robot_msgs::RobotInfo&);
   void orderPositionReceived(const tuw_multi_robot_msgs::OrderPosition&);
   void stationsReceived(const tuw_multi_robot_msgs::StationArray&);

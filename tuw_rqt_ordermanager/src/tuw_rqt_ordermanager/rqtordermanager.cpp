@@ -55,14 +55,12 @@ void RQTOrdermanager::initPlugin(qt_gui_cpp::PluginContext& context)
   context.addWidget(widget_);
 
   qRegisterMetaType<nav_msgs::OccupancyGrid>("nav_msgs::OccupancyGrid");
-  qRegisterMetaType<nav_msgs::Odometry>("nav_msgs::Odometry");
   qRegisterMetaType<tuw_multi_robot_msgs::RobotInfo>("tuw_multi_robot_msgs::RobotInfo");
   qRegisterMetaType<tuw_multi_robot_msgs::OrderPosition>("tuw_multi_robot_msgs::OrderPosition");
   qRegisterMetaType<tuw_multi_robot_msgs::StationArray>("tuw_multi_robot_msgs::StationArray");
   qRegisterMetaType<std::string>("std::string");
 
   connect(this, &RQTOrdermanager::mapChanged, this, &RQTOrdermanager::setMap, Qt::QueuedConnection);
-  connect(this, &RQTOrdermanager::odomReceived, this, &RQTOrdermanager::odomHandle, Qt::QueuedConnection);
   connect(this, &RQTOrdermanager::robotInfoReceived, this, &RQTOrdermanager::robotInfoHandle, Qt::QueuedConnection);
   connect(this, &RQTOrdermanager::orderPositionReceived, this, &RQTOrdermanager::orderPositionHandle, Qt::QueuedConnection);
   connect(this, &RQTOrdermanager::stationsReceived, this, &RQTOrdermanager::stationsHandle, Qt::QueuedConnection);
@@ -103,7 +101,6 @@ void RQTOrdermanager::initPlugin(qt_gui_cpp::PluginContext& context)
       getNodeHandle().subscribe("/order_position", 10, &tuw_rqt_ordermanager::RQTOrdermanager::orderPositionCallback, this));
   subscriptions_.push_back(
       getNodeHandle().subscribe("/stations", 10, &tuw_rqt_ordermanager::RQTOrdermanager::stationsCallback, this));
-  subscribeRobotOdom();
 
 }
 
@@ -458,25 +455,6 @@ void RQTOrdermanager::newStation(float x, float y, float z)
   }
 }
 
-void RQTOrdermanager::subscribeRobotOdom()
-{
-  // TODO: use roboInfo instead of odom
-  ros::master::V_TopicInfo master_topics;
-  ros::master::getTopics(master_topics);
-
-  for (ros::master::V_TopicInfo::iterator it = master_topics.begin(); it != master_topics.end(); it++)
-  {
-    const ros::master::TopicInfo& info = *it;
-    // if(std::regex_match(info.name, std::regex("/robot_(0-9)+/odom")))
-    if (info.name.find("/robot_") == 0 &&
-        (info.name.substr(std::max(5, (int)info.name.length() - 5)) == std::string("/odom")))
-    {
-      subscriptions_.push_back(
-          getNodeHandle().subscribe(info.name, 1, &tuw_rqt_ordermanager::RQTOrdermanager::odomCallback, this));
-    }
-  }
-}
-
 void RQTOrdermanager::orderPositionCallback(const tuw_multi_robot_msgs::OrderPosition& gp)
 {
   emit orderPositionReceived(gp);
@@ -544,26 +522,6 @@ void RQTOrdermanager::robotInfoHandle(const tuw_multi_robot_msgs::RobotInfo& ri)
   QString q_robot_name = QString::fromStdString(robot_name);
 
   QList<QListWidgetItem*> matched_robots = ui_.lst_robots->findItems(q_robot_name, Qt::MatchExactly);
-  if (matched_robots.size() == 1)
-  {
-    ItemRobot* ir = (ItemRobot*)matched_robots[0];
-    ir->setRobotRadius(map_transformation_.transformMapToScene(MapTransformation::TRANSFORM_SCALAR, ri.shape_variables[0]));
-    scene_.update();
-  }
-}
-
-void RQTOrdermanager::odomCallback(const nav_msgs::Odometry& odom)
-{
-  emit odomReceived(odom);
-}
-
-void RQTOrdermanager::odomHandle(const nav_msgs::Odometry& odom)
-{
-  std::string robot_name = odom.header.frame_id.substr(1, odom.header.frame_id.find_last_of('/') - 1);
-
-  QString q_robot_name = QString::fromStdString(robot_name);
-
-  QList<QListWidgetItem*> matched_robots = ui_.lst_robots->findItems(q_robot_name, Qt::MatchExactly);
   ItemRobot* ir;
   if (matched_robots.size() == 0)
   {
@@ -571,6 +529,7 @@ void RQTOrdermanager::odomHandle(const nav_msgs::Odometry& odom)
     ir->setDrawBoundingRect(ui_.cb_showBoundingRects->isChecked());
     ir->setRobotName(q_robot_name);
     ir->setZValue(1);
+    ir->setRobotRadius(map_transformation_.transformMapToScene(MapTransformation::TRANSFORM_SCALAR, ri.shape_variables[0]));
 
     scene_.addItem(ir);
     ui_.lst_robots->addItem(ir);
@@ -580,7 +539,7 @@ void RQTOrdermanager::odomHandle(const nav_msgs::Odometry& odom)
     ir = (ItemRobot*)matched_robots[0];
   }
 
-  ir->setPose(map_transformation_.transformMapToScene(odom.pose.pose));
+  ir->setPose(map_transformation_.transformMapToScene(ri.pose.pose));
 
   scene_.update();
 }
@@ -593,13 +552,13 @@ void RQTOrdermanager::sendOrders()
     ItemOrder* ir = (ItemOrder*)ui_.lst_orders->item(i);
     ir->setDrawingMode(DRAWING_MODE_EXEC);
     //std::vector<geometry_msgs::Pose*> poses = ir->getPoses();
-    RWVector<std::string> * station_ids = ir->getStations();
-    station_ids->lock();
+    RWVector<std::string> * station_names = ir->getStations();
+    station_names->lock();
 
     // stations empty, no need to transport it anywhere
-    if (station_ids->size() <= 1)
+    if (station_names->size() <= 1)
     {
-      station_ids->unlock();
+      station_names->unlock();
       continue;
     }
 
@@ -610,32 +569,22 @@ void RQTOrdermanager::sendOrders()
 
     // target stations:
     mtx_lst_stations->lock();
-    for (int j = 0; j < station_ids->size(); ++j)
+    for (int j = 0; j < station_names->size(); ++j)
     {
-      std::string _station_name = station_ids->at(j);
-      // TODO send stations, not poses
-      
-      //ItemStation* station = findStationById(_station_id);
+      std::string _station_name = station_names->at(j);
       ItemStation* station = findStationByName(_station_name);
       if ( station == nullptr )
         continue;
 
-      geometry_msgs::Pose pose = station->getPose();
-      //geometry_msgs::Pose* pose = poses.at(j);
-      float x = map_transformation_.transformSceneToMap(MapTransformation::TRANSFORM_X, pose.position.x);
-      float y = map_transformation_.transformSceneToMap(MapTransformation::TRANSFORM_Y, pose.position.y);
-      float z = map_transformation_.transformSceneToMap(MapTransformation::TRANSFORM_Z, pose.position.z);
-
-      // pose = new geometry_msgs::Pose(x, y, z, 0, 0, 0);
-      geometry_msgs::Pose* new_pose = new geometry_msgs::Pose();
-      new_pose->position.x = x;
-      new_pose->position.y = y;
-      new_pose->position.z = z;
-
-      order_msg.positions.push_back(*new_pose);
+      tuw_multi_robot_msgs::Station msg_station;
+      msg_station.name = station->getStationName().toStdString();
+      msg_station.pose = map_transformation_.transformSceneToMap(
+          station->getPose());
+      msg_station.id = station->getId();
+      order_msg.stations.push_back(msg_station);
     }
     mtx_lst_stations->unlock();
-    station_ids->unlock();
+    station_names->unlock();
 
     order_array_msg.orders.push_back(order_msg);
   }
@@ -643,7 +592,6 @@ void RQTOrdermanager::sendOrders()
   pub_orders_.publish(order_array_msg);
 }
 
-//void RQTOrdermanager::orderAddPose(float x, float y, float z)
 void RQTOrdermanager::orderAddStation(std::string station_name)
 {
   QList<QListWidgetItem*> list = ui_.lst_orders->selectedItems();
@@ -653,15 +601,6 @@ void RQTOrdermanager::orderAddStation(std::string station_name)
   }
   ItemOrder* ir = (ItemOrder*)list[0];
 
-  /*
-  geometry_msgs::Pose* pose = new geometry_msgs::Pose();
-  pose->position.x = x;
-  pose->position.y = y;
-  pose->position.z = z;
-  if (ir->getPoses().size() == 0)
-    ir->setCurrentPose(pose);
-  ir->addPose(pose);
-  */
   ir->addStation(station_name);
   scene_.update();
 }
