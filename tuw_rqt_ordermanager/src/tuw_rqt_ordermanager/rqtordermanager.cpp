@@ -384,7 +384,7 @@ void RQTOrdermanager::lockedDeleteStationByName(std::string station_name)
 void RQTOrdermanager::deleteStationByName(std::string station_name)
 {
   ItemStation* is = findStationByName(station_name);
-  tuw_multi_robot_srvs::StationManagerStationProtocol delStation;
+  tuw_multi_robot_msgs::StationManagerStationProtocol delStation;
   tuw_multi_robot_msgs::Station station;
   station.id = is->getId();
   station.name = is->getStationName().toStdString();
@@ -431,7 +431,7 @@ void RQTOrdermanager::newStation(float x, float y, float z)
   {
 
   
-    tuw_multi_robot_srvs::StationManagerStationProtocol addStation;
+    tuw_multi_robot_msgs::StationManagerStationProtocol addStation;
     tuw_multi_robot_msgs::Station station;
     station.id = dialog->getStationId(); //int32
     station.name = dialog->getStationName().toStdString(); //string
@@ -619,7 +619,7 @@ void RQTOrdermanager::orderClearPoses()
 
 void RQTOrdermanager::requestUpdateOnce()
 {
-  tuw_multi_robot_srvs::StationManagerControlProtocol command;
+  tuw_multi_robot_msgs::StationManagerControlProtocol command;
   command.request.request = "update";
   command.request.addition = "once";
   if(ros::service::call("station_manager_control_service", command))

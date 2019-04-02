@@ -9,8 +9,8 @@
 #include <tuw_rqt_ordermanager/stationdialog.h>
 #include <tuw_rqt_ordermanager/orderdialog.h>
 
-#include <tuw_multi_robot_srvs/StationManagerStationProtocol.h>
-#include <tuw_multi_robot_srvs/StationManagerControlProtocol.h>
+#include <tuw_multi_robot_msgs/StationManagerStationProtocol.h>
+#include <tuw_multi_robot_msgs/StationManagerControlProtocol.h>
 
 #include <tuw_rqt_ordermanager/item_robot.h>
 #include <tuw_rqt_ordermanager/item_order.h>

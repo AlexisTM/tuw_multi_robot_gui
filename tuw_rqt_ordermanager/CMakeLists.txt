@@ -16,7 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   geometry_msgs
   tuw_multi_robot_msgs
-  tuw_multi_robot_srvs
   tf
 )
 
@@ -314,5 +313,4 @@ endif()
 add_dependencies(${PROJECT_NAME}
     tuw_multi_robot_msgs_generate_messages_cpp
     geometry_msgs_generate_messages_cpp
-    tuw_multi_robot_srvs_generate_messages_cpp
 )
